@@ -3,9 +3,6 @@ Quantum Fourier Transform Benchmark Program - CUDA Quantum Kernel
 (C) Quantum Economic Development Consortium (QED-C) 2024.
 '''
 
-# DEVNOTE: Method 2 of this benchmark does not work correctly due to limitations in the ability
-# for the Python version of cudaq to collect and return an array of measured values (Issue #????).
-# Only the final measurements are returned, meaning the fidelity is not determined correctly.
 import cudaq
 
 from typing import List
@@ -128,10 +125,40 @@ def qft_kernel(num_qubits: int, secret_int: int, init_phases: List[float], metho
 		
 	# method 2 is just the IQFT
 	elif method == 2:
-	
+
+		for i_q in range(num_qubits):
+			h(qubits[i_q])
+
+		for i_q in range(num_qubits):
+			ri_q = num_qubits - i_q - 1
+			divisor = 2 ** i_q
+			rz(secret_int * M_PI / divisor, qubits[ri_q])
+
+		# perform inverse quantum fourier transform to convert back to computational basis
+		iqft(qubits)
+
 		# Measure to gather sampling statistics
 		mz(qubits)
-		
+
+	# This method is a work in progress
+	elif method == 3:
+
+		safe_secret_int = secret_int
+		if safe_secret_int > num_qubits:
+			safe_secret_int = num_qubits
+
+		for i_q in range(safe_secret_int):
+			h(qubits[num_qubits - i_q - 1])
+
+		for i_q in range(safe_secret_int, num_qubits):
+			x(qubits[num_qubits - i_q - 1])
+
+		# perform inverse quantum fourier transform to convert back to computational basis
+		iqft(qubits)
+
+		# Measure to gather sampling statistics
+		mz(qubits)
+
 	pass
 
 
