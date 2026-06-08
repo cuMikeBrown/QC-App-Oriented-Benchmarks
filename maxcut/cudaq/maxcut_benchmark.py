@@ -109,7 +109,7 @@ def MaxCut(num_qubits, secret_int, edges, rounds, thetas_array,
     _compute_expectation_decorator(num_qubits, secret_int,
                                    edges_a, edges_b, betas, gammas)
 
-    qc = [_qaoa_measured, [num_qubits, edges_a, edges_b, betas, gammas]]
+    qc = [_qaoa_measured, [num_qubits, edges_a, edges_b, betas, gammas], {"counts_dict": True}]
 
     global QC_
     if QC_ is None or num_qubits <= 6:
