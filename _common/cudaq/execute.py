@@ -511,14 +511,13 @@ def get_circuit_metrics(qc, qc_size):
         
         total_gates = resources.count()
         
+        controlled_gates = ['x', 'y', 'z', 'r1', 'rx', 'ry', 'rz']
         two_qubit_gates = 0
-        two_qubit_gates += resources.count_controls('x', 1)
-        two_qubit_gates += resources.count_controls('y', 1)
-        two_qubit_gates += resources.count_controls('z', 1)
-        two_qubit_gates += resources.count_controls('r1', 1)
-        two_qubit_gates += resources.count_controls('rx', 1)
-        two_qubit_gates += resources.count_controls('ry', 1)
-        two_qubit_gates += resources.count_controls('rz', 1)
+        for gate in controlled_gates:
+            for num_controls in range(1, qc_size):
+                two_qubit_gates += (
+                    num_controls * resources.count_controls(gate, num_controls)
+                )
         
         #print(f"... depth = {resources.count_depth()}") # doesn't exist yet
         #print(f"Total: {total_gates}, 2-qubit: {two_qubit_gates}")
