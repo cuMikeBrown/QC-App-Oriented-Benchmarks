@@ -223,10 +223,7 @@ def run(min_qubits=MIN_QUBITS, max_qubits=10, skip_qubits=1, max_circuits=1, num
                 all_qcs[str(num_qubits)][str(mu)] = qc
                 continue
 
-            # collapse the sub-circuit levels
-            qc2 = qc.decompose().decompose().decompose().decompose()
-
-            ex.submit_circuit(qc2, num_qubits, mu, num_shots)
+            ex.submit_circuit(qc, num_qubits, mu, num_shots)
 
         ex.throttle_execution(metrics.finalize_group)
 
