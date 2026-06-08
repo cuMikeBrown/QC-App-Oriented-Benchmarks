@@ -42,8 +42,8 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
     # Import the actual benchmark module (now available after qedc_init)
     import maxcut_benchmark as maxcut_impl
 
-    # Use default backend_id if None passed
-    if backend_id is None:
+    # qasm_simulator is qiskit-Aer-specific; cudaq uses its own default target.
+    if backend_id is None and selected_api == "qiskit":
         backend_id = "qasm_simulator"
 
     # Build common parameters
