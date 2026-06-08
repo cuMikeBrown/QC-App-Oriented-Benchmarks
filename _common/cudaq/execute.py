@@ -65,10 +65,34 @@ verbose = False
 #   reverse_bit_order — reverse each count key string before returning.
 #   counts_dict — convert the SampleResult to a plain dict (some analyzers
 #       depend on full dict APIs like .keys()).
+def _get_circuit_options(circuit):
+    if len(circuit) > 2 and isinstance(circuit[2], dict):
+        return circuit[2]
+    return {}
+
+
+def _bind_circuit_params(circuit, params=None):
+    if params is None:
+        return circuit
+
+    options = _get_circuit_options(circuit)
+    indices = options.get("parameterized_indices")
+    if not indices:
+        return circuit
+
+    bound_params = list(circuit[1])
+    for name, index in indices.items():
+        bound_params[index] = params[name]
+
+    if len(circuit) > 2:
+        return [circuit[0], bound_params, circuit[2]]
+    return [circuit[0], bound_params]
+
+
 def _sample_or_run(circuit, num_shots, noise=None):
     kernel = circuit[0]
     params = circuit[1]
-    options = circuit[2] if len(circuit) > 2 else {}
+    options = _get_circuit_options(circuit)
 
     sample_kwargs = {"shots_count": num_shots}
     if noise is not None:
@@ -400,12 +424,12 @@ def set_noise_model(noise_model = None):
 
 # Submit circuit for execution
 # This version executes immediately and calls the result handler
-def submit_circuit (qc, group_id, circuit_id, shots=100):
+def submit_circuit (qc, group_id, circuit_id, shots=100, params=None):
 
     # store circuit in array with submission time and circuit info
     batched_circuits.append(
         { "qc": qc, "group": str(group_id), "circuit": str(circuit_id),
-            "submit_time": time.time(), "shots": shots }
+            "submit_time": time.time(), "shots": shots, "params": params }
     )
     #print("... submit circuit - ", str(batched_circuits[len(batched_circuits)-1]))
     
@@ -430,7 +454,10 @@ def execute_circuit (batched_circuit):
     num_shots = batched_circuit["shots"]
     
     # Initiate execution 
-    circuit = batched_circuit["qc"]
+    circuit = _bind_circuit_params(
+        batched_circuit["qc"], batched_circuit.get("params")
+    )
+    active_circuit["qc"] = circuit
     
     ############
     

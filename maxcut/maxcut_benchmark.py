@@ -72,6 +72,13 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
             use_fixed_angles=use_fixed_angles,
             context=context,
         )
+    elif selected_api == "cudaq":
+        kwargs.update(
+            skip_qubits=skip_qubits,
+            rounds=rounds,
+            use_fixed_angles=use_fixed_angles,
+            context=context,
+        )
     elif selected_api == "ocean":
         kwargs.update(
             min_annealing_time=min_annealing_time,
@@ -112,6 +119,7 @@ def get_args():
     parser.add_argument("--method", "-m", default=1, help="Algorithm Method", type=int)
     parser.add_argument("--rounds", "-r", default=1, help="Number of QAOA rounds", type=int)
     parser.add_argument("--degree", "-d", default=3, help="Degree of graph", type=int)
+    parser.add_argument("--parameterized", action="store_true", help="Use parameterized circuit path")
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
@@ -130,6 +138,7 @@ if __name__ == "__main__":
         method=args.method,
         rounds=args.rounds,
         degree=args.degree,
+        parameterized=args.parameterized,
         backend_id=args.backend_id,
         exec_options={"noise_model": None} if args.nonoise else {},
         api=args.api,
