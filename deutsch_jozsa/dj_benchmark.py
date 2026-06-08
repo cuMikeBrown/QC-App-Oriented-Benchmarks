@@ -137,17 +137,14 @@ def run (min_qubits=3, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
             qc = kernel.DeutschJozsa(num_qubits, type)
             metrics.store_metric(num_qubits, circuit_id, 'create_time', time.time()-ts)
 
-            # collapse the sub-circuit levels used in this benchmark (for qiskit)
-            qc2 = qc.decompose()
-
             # Store each circuit if we want to return them
             if get_circuits:
-                all_qcs[str(num_qubits)][str(circuit_id)] = qc2
+                all_qcs[str(num_qubits)][str(circuit_id)] = qc
                 # Continue to skip sumbitting the circuit for execution.
                 continue
 
             # submit circuit for execution on target (simulator, cloud simulator, or hardware)
-            ex.submit_circuit(qc2, num_qubits, circuit_id, num_shots)
+            ex.submit_circuit(qc, num_qubits, circuit_id, num_shots)
         
         # Wait for some active circuits to complete; report metrics when groups complete
         ex.throttle_execution(metrics.finalize_group)
@@ -212,7 +209,7 @@ if __name__ == '__main__':
         #method=args.method,
         backend_id=args.backend_id,
         exec_options = {"noise_model" : None} if args.nonoise else {},
-        #api=args.api,
+        api=args.api,
         draw_circuits=not args.nodraw, plot_results=not args.noplot
         )
    
