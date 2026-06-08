@@ -40,19 +40,16 @@ def generate_numbers():
 
 # Verifies base**order mod number = 1
 def verify_order(base, number, order):
-    return base ** order % number == 1
+    # pow(a, order, number) avoids the float overflow that base**order hits
+    # when order is large enough to exceed double-precision range.
+    return pow(base, order, number) == 1
 
 # Generates the base for base**order mod number = 1
 def generate_base(number, order):
-    # Max values for a and x
-    a = number
-    x = math.log(number ** order - 1, number)
-
-    # a must be less than number
-    while a >= number or not verify_order(a, number, order):
-        a = int((number ** x + 1) ** (1 / order))
-        x -= 1 / a
-    return a
+    for a in range(2, number):
+        if verify_order(a, number, order):
+            return a
+    return 1
 
 # Choose a base at random < N / 2 without a common factor of N
 def choose_random_base(N):
