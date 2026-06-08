@@ -120,6 +120,7 @@ def get_args():
     parser.add_argument("--rounds", "-r", default=1, help="Number of QAOA rounds", type=int)
     parser.add_argument("--degree", "-d", default=3, help="Degree of graph", type=int)
     parser.add_argument("--parameterized", action="store_true", help="Use parameterized circuit path")
+    parser.add_argument("--skip_fidelity", action="store_true", help="Skip fidelity calculation")
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
@@ -139,6 +140,7 @@ if __name__ == "__main__":
         rounds=args.rounds,
         degree=args.degree,
         parameterized=args.parameterized,
+        do_fidelities=not args.skip_fidelity,
         backend_id=args.backend_id,
         exec_options={"noise_model": None} if args.nonoise else {},
         api=args.api,

@@ -567,6 +567,8 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
 
     def execution_handler(qc, result, num_qubits, circuit_id, num_shots):
         num_qubits = int(num_qubits)
+        if not do_compute_expectation:
+            return
         _, fidelity = analyze_and_print_result(
             qc, result, num_qubits, num_shots, secret_int=int(circuit_id)
         )
@@ -685,11 +687,12 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
                     )
                     ex.finalize_execution(None, report_end=False)
 
-                    _, fidelity = analyze_and_print_result(
-                        qc, saved_result, num_qubits, num_shots,
-                        secret_int=unique_id,
-                    )
-                    metrics.store_metric(num_qubits, unique_id, "fidelity", fidelity)
+                    if do_compute_expectation:
+                        _, fidelity = analyze_and_print_result(
+                            qc, saved_result, num_qubits, num_shots,
+                            secret_int=unique_id,
+                        )
+                        metrics.store_metric(num_qubits, unique_id, "fidelity", fidelity)
 
                     dict_of_vals = dict()
                     tc1 = time.time()
