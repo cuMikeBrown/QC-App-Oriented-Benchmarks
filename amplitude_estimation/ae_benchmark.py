@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 # The QED-C initialization module
 from _common.qedc_init import qedc_benchmarks_init
 from _common import metrics
-from _common.backend_utils import is_simulator_backend
+from _common.backend_utils import api_display_name, is_simulator_backend
 
 
 # Benchmark Name
@@ -112,7 +112,7 @@ def run(min_qubits=3, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=100
 
     ##########
 
-    print(f"{benchmark_name} Benchmark Program - {api if api else 'Qiskit'}")
+    print(f"{benchmark_name} Benchmark Program - {api_display_name(api)}")
 
     # Clamp the maximum number of qubits
     if max_qubits > MAX_QUBITS and not is_simulator_backend(api, backend_id, provider_backend):

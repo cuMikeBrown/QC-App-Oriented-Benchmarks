@@ -13,6 +13,7 @@ from typing import List
 
 from _common import metrics
 from _common.cudaq import execute as ex
+from _common.backend_utils import api_display_name
 
 from shors._common.shors_utils import generate_base
 from shors._common.shors_helpers import (
@@ -192,7 +193,7 @@ def run(min_qubits=3, max_circuits=1, max_qubits=18, num_shots=100, method=1,
             f"Shors cudaq port supports methods 1 and 2 only "
             f"(got method={method}).")
 
-    print(f"{benchmark_name} ({method}) Benchmark - cudaq")
+    print(f"{benchmark_name} ({method}) Benchmark - {api_display_name(api)}")
 
     if method == 1:
         qubit_multiple = 4

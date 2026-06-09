@@ -24,3 +24,14 @@ def is_simulator_backend(api=None, backend_id=None, provider_backend=None):
         } or "simulator" in backend
 
     return backend_id is None or "simulator" in backend
+
+
+def api_display_name(api=None):
+    api_name = (api or "qiskit").lower()
+    return {
+        "cudaq": "CUDA-Q",
+        "qiskit": "Qiskit",
+        "cirq": "Cirq",
+        "braket": "Braket",
+        "ocean": "Ocean",
+    }.get(api_name, api or "Qiskit")

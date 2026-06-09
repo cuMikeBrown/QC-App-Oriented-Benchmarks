@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 from _common.qedc_init import qedc_benchmarks_init
 from _common import metrics
 from _common import qcb_mpi as mpi
+from _common.backend_utils import api_display_name
 
 
 api_ = "qiskit" 
@@ -364,7 +365,7 @@ def run(min_qubits: int = 2,
 
     ##########
     
-    print(f"{benchmark_name} Benchmark Program - {api}")
+    print(f"{benchmark_name} Benchmark Program - {api_display_name(api)}")
     
     # Create context identifier
     if context is None: context = f"{benchmark_name} Benchmark"
@@ -861,7 +862,7 @@ def run(min_qubits: int = 2,
         #plot_results_from_data(**dict_of_inputs)
         
         ############## expectation value plot
-        suptitle = f"Benchmark Results - {benchmark_name} ({method}) - {api if api else 'Qiskit'}"
+        suptitle = f"Benchmark Results - {benchmark_name} ({method}) - {api_display_name(api)}"
         
         # should not be needed; needs investigation, saving image fails if command line invocation
         # and non-observable case works fine.
@@ -1200,4 +1201,3 @@ if __name__ == '__main__':
         do_run(args)
         
     
-

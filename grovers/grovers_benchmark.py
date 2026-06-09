@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 from _common.qedc_init import qedc_benchmarks_init
 from _common import metrics
 from _common import qcb_mpi as mpi
-from _common.backend_utils import is_simulator_backend
+from _common.backend_utils import api_display_name, is_simulator_backend
 
 
 # Benchmark Name
@@ -84,7 +84,7 @@ def run(min_qubits=2, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
     
     ##########
     
-    print(f"{benchmark_name} Benchmark Program - Qiskit")
+    print(f"{benchmark_name} Benchmark Program - {api_display_name(api)}")
 
     # create context identifier
     if context is None: context = f"{benchmark_name} Benchmark"

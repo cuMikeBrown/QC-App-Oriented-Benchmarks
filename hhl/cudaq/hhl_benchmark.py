@@ -12,6 +12,7 @@ import cudaq
 
 from _common import metrics
 from _common.cudaq import execute as ex
+from _common.backend_utils import api_display_name
 from hhl._common.hhl_helpers import (
     generate_sparse_H,
     analyze_and_print_result as _hhl_analyze_and_print_result,
@@ -281,7 +282,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
     min_clock_qubits = min_qubits - 1 - 2 * min_input_qubits
     max_clock_qubits = max_qubits - 1 - 2 * max_input_qubits
 
-    print(f"{benchmark_name} Benchmark Program - cudaq")
+    print(f"{benchmark_name} Benchmark Program - {api_display_name(api)}")
 
     metrics.init_metrics()
 

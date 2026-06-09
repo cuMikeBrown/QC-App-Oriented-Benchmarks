@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 # The QED-C initialization module (import before adding local _common to path)
 from _common.qedc_init import qedc_benchmarks_init
 from _common import metrics
-from _common.backend_utils import is_simulator_backend
+from _common.backend_utils import api_display_name, is_simulator_backend
 
 # Add local _common to path for mc_utils (after global _common imports)
 sys.path.insert(0, str(Path(__file__).parent / "_common"))
@@ -132,7 +132,7 @@ def run(min_qubits=MIN_QUBITS, max_qubits=10, skip_qubits=1, max_circuits=1, num
 
     ##########
 
-    print(f"{benchmark_name} ({method}) Benchmark Program - {api if api else 'Qiskit'}")
+    print(f"{benchmark_name} ({method}) Benchmark Program - {api_display_name(api)}")
 
     # Clamp the maximum number of qubits
     if max_qubits > MAX_QUBITS and not is_simulator_backend(api, backend_id, provider_backend):
