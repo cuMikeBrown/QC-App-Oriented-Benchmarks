@@ -4,6 +4,7 @@ Quantum Fourier Transform Benchmark Program - CUDA Quantum Kernel
 '''
 
 import cudaq
+import math
 
 from typing import List
 
@@ -131,8 +132,7 @@ def qft_kernel(num_qubits: int, secret_int: int, init_phases: List[float], metho
 
 		for i_q in range(num_qubits):
 			ri_q = num_qubits - i_q - 1
-			divisor = 2 ** i_q
-			rz(secret_int * M_PI / divisor, qubits[ri_q])
+			rz(init_phases[i_q], qubits[ri_q])
 
 		# perform inverse quantum fourier transform to convert back to computational basis
 		iqft(qubits)
@@ -171,6 +171,12 @@ def barrier(qubits: cudaq.qview, num_qubits: int):
 			
 			
 def QuantumFourierTransform (num_qubits: int, secret_int: int, init_phase: List[float], method: int = 1, use_midcircuit_measurement: bool = False):
+
+	if method == 2:
+		init_phase = [
+			(secret_int % (2 ** (i_q + 1))) * math.pi / (2 ** i_q)
+			for i_q in range(num_qubits)
+		]
 
 	qc = [qft_kernel, [num_qubits, secret_int, init_phase, method, use_midcircuit_measurement]]
 	if method == 3:
