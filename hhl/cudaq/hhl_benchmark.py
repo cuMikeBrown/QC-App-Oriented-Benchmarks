@@ -324,7 +324,9 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
             for i in range(max_circuits):
                 b = int(np.random.choice(range(1, N)))
                 off_diag_index = int(np.random.choice(range(1, N)))
-                s_int = 1000 * (i + 1) + (1 << off_diag_index) * (3 ** b)
+                # Pack (i+1, odi, b) into 24-bit fields so the analyzer can
+                # recover them losslessly for any n_input up to 24.
+                s_int = ((i + 1) << 48) | (off_diag_index << 24) | b
                 circuit_id = s_int
 
                 A = generate_sparse_H(num_input_qubits, off_diag_index,

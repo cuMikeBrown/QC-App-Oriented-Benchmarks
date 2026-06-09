@@ -88,22 +88,12 @@ def analyze_and_print_result(qc, result, num_qubits, num_shots, s_int=None,
     if verbose:
         print(f'... ratio of counts with ancilla measured |1> : {round(rate, 4)}')
 
-    # remove instance index from s_int
-    s_int = s_int - 1000 * int(s_int / 1000)
-
-    off_diag_index = 0
-    b = 0
-    s_int_o = int(s_int)
-    s_int_b = int(s_int)
-    while (s_int_o % 2) == 0:
-        s_int_o = int(s_int_o / 2)
-        off_diag_index += 1
-    while (s_int_b % 3) == 0:
-        s_int_b = int(s_int_b / 3)
-        b += 1
+    # Decode the (i+1, odi, b) 24-bit packed fields written by the run loop.
+    b = s_int & 0xFFFFFF
+    off_diag_index = (s_int >> 24) & 0xFFFFFF
 
     if verbose:
-        print(f"... rem(s_int) = {s_int}, b = {b}, odi = {off_diag_index}")
+        print(f"... b = {b}, odi = {off_diag_index}")
 
     diag_el = 0.5
     off_diag_el = -0.25
