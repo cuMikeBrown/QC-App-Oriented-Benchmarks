@@ -902,7 +902,7 @@ def get_width_restart_tuple_from_filename(fileName):
 
 #%% Run method: Benchmarking loop
 
-MAX_QUBITS = 24
+MAX_QUBITS = 40
 iter_dist = {'cuts' : [], 'counts' : [], 'sizes' : []} # (list of measured bitstrings, list of corresponding counts, list of corresponding cut sizes)
 iter_size_dist = {'unique_sizes' : [], 'unique_counts' : [], 'cumul_counts' : []} # for the iteration being executed, stores the distribution for cut sizes
 saved_result = {  }

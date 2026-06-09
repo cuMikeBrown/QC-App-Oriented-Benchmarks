@@ -40,7 +40,7 @@ do_compute_expectation = True
 
 QC_ = None
 
-MAX_QUBITS = 24
+MAX_QUBITS = 40
 
 # CUDA-Q sample bitstrings are ordered with qubit 0 at string index 0.
 reverseStep = 1
