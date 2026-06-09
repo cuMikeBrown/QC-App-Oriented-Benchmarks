@@ -322,9 +322,9 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
                   f"using {num_input_qubits} input qubits and {num_clock_qubits} clock qubits")
 
             for i in range(max_circuits):
-                b = np.random.choice(range(1, N))
-                off_diag_index = np.random.choice(range(1, N))
-                s_int = 1000 * (i + 1) + (2 ** off_diag_index) * (3 ** b)
+                b = int(np.random.choice(range(1, N)))
+                off_diag_index = int(np.random.choice(range(1, N)))
+                s_int = 1000 * (i + 1) + (1 << off_diag_index) * (3 ** b)
                 circuit_id = s_int
 
                 A = generate_sparse_H(num_input_qubits, off_diag_index,
