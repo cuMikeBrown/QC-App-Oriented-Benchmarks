@@ -782,6 +782,9 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
                     _instances=_instances,
                 )
 
+        if method == 1 and not get_circuits:
+            ex.throttle_execution(metrics.finalize_group)
+
         if method == 2:
             metrics.process_circuit_metrics_2_level(num_qubits)
             metrics.finalize_group(str(num_qubits))
@@ -791,8 +794,9 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
         return all_qcs, metrics.circuit_metrics
 
     if method == 1:
-        ex.throttle_execution(metrics.finalize_group)
-    ex.finalize_execution(metrics.finalize_group)
+        ex.finalize_execution(None)
+    else:
+        ex.finalize_execution(metrics.finalize_group)
 
     if draw_circuits and print_sample_circuit:
         print("Sample Circuit:")
