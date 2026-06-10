@@ -152,7 +152,7 @@ def run(min_qubits=2, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
         else:
             # create selection larger than needed and remove duplicates (faster than random.choice())
             s_range = np.random.randint(1, 2**(num_qubits), num_circuits + 10)
-            s_range = list(set(s_range))[0:max_circuits]
+            s_range = list(dict.fromkeys(s_range))[0:max_circuits]
         
         # loop over limited # of secret strings for this
         for s_int in s_range:

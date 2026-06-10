@@ -185,7 +185,7 @@ def run (min_qubits=2, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
                 s_range = list(range(num_circuits))
             else:
                 s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
-                s_range = list(set(s_range))[0:num_circuits]
+                s_range = list(dict.fromkeys(s_range))[0:num_circuits]
          
         elif method == 3:
             num_circuits = min(input_size, max_circuits)
@@ -194,7 +194,7 @@ def run (min_qubits=2, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
                 s_range = list(range(num_circuits))
             else:
                 s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
-                s_range = list(set(s_range))[0:num_circuits]
+                s_range = list(dict.fromkeys(s_range))[0:num_circuits]
         
         else:
             sys.exit("Invalid QFT method")
@@ -212,7 +212,7 @@ def run (min_qubits=2, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
         else:
             # create selection larger than needed and remove duplicates
             s_range = np.random.randint(1, 2**(input_size), num_circuits + 2)
-            s_range = list(set(s_range))[0:max_circuits]
+            s_range = list(dict.fromkeys(s_range))[0:max_circuits]
             
         # loop over limited # of secret strings for this
         for s_int in s_range:

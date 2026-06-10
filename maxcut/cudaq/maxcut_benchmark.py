@@ -336,9 +336,9 @@ def uniform_cut_sampling(num_qubits, degree, num_shots, _instances=None):
     nodes, edges = common.read_maxcut_instance(instance_filename, _instances)
 
     unif_cuts = np.random.randint(2 ** num_qubits, size=num_shots).tolist()
-    unif_cuts_uniq = list(set(unif_cuts))
+    unif_cuts_uniq = list(dict.fromkeys(unif_cuts))
     unif_counts = [unif_cuts.count(cut) for cut in unif_cuts_uniq]
-    unif_cuts = list(set(unif_cuts))
+    unif_cuts = unif_cuts_uniq
 
     def int_to_bs(numb):
         bitstring = format(numb, "b")
@@ -693,57 +693,60 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
                     )
                     ex.finalize_execution(None, report_end=False)
 
-                    if do_compute_expectation:
-                        _, fidelity = analyze_and_print_result(
-                            qc, saved_result, num_qubits, num_shots,
-                            secret_int=unique_id,
-                        )
-                        metrics.store_metric(num_qubits, unique_id, "fidelity", fidelity)
+                    objective_value = None
+                    if mpi.leader():
+                        if do_compute_expectation:
+                            _, fidelity = analyze_and_print_result(
+                                qc, saved_result, num_qubits, num_shots,
+                                secret_int=unique_id,
+                            )
+                            metrics.store_metric(num_qubits, unique_id, "fidelity", fidelity)
 
-                    dict_of_vals = dict()
-                    tc1 = time.time()
-                    cuts, counts, sizes = compute_cutsizes(saved_result, nodes, edges)
-                    dict_of_vals[objective_func_type] = function_mapper[
-                        objective_func_type
-                    ](counts, sizes, alpha=alpha)
-                    metrics.store_metric(
-                        num_qubits, unique_id, "opt_exec_time",
-                        time.time() - tc1 + ts - opt_ts,
-                    )
-
-                    unique_counts, unique_sizes, cumul_counts = get_size_dist(
-                        counts, sizes
-                    )
-                    iter_size_dist = {
-                        "unique_sizes": unique_sizes,
-                        "unique_counts": unique_counts,
-                        "cumul_counts": cumul_counts,
-                    }
-                    metrics.store_metric(num_qubits, unique_id, None, iter_size_dist)
-
-                    for score in non_objFunc_ratios:
-                        dict_of_vals[score] = function_mapper[score](
-                            counts, sizes, alpha=alpha
+                        dict_of_vals = dict()
+                        tc1 = time.time()
+                        cuts, counts, sizes = compute_cutsizes(saved_result, nodes, edges)
+                        dict_of_vals[objective_func_type] = function_mapper[
+                            objective_func_type
+                        ](counts, sizes, alpha=alpha)
+                        metrics.store_metric(
+                            num_qubits, unique_id, "opt_exec_time",
+                            time.time() - tc1 + ts - opt_ts,
                         )
 
-                    dict_of_ratios = {
-                        key: -1 * val / opt for key, val in dict_of_vals.items()
-                    }
-                    dict_of_ratios["gibbs_ratio"] = dict_of_ratios["gibbs_ratio"] / eta
-                    metrics.store_metric(num_qubits, unique_id, None, dict_of_ratios)
+                        unique_counts, unique_sizes, cumul_counts = get_size_dist(
+                            counts, sizes
+                        )
+                        iter_size_dist = {
+                            "unique_sizes": unique_sizes,
+                            "unique_counts": unique_counts,
+                            "cumul_counts": cumul_counts,
+                        }
+                        metrics.store_metric(num_qubits, unique_id, None, iter_size_dist)
 
-                    best = -compute_best_cut_from_measured(counts, sizes)
-                    metrics.store_metric(
-                        num_qubits, unique_id, "bestcut_ratio", best / opt
-                    )
+                        for score in non_objFunc_ratios:
+                            dict_of_vals[score] = function_mapper[score](
+                                counts, sizes, alpha=alpha
+                            )
 
-                    quantile_sizes = compute_quartiles(counts, sizes)
-                    metrics.store_metric(
-                        num_qubits, unique_id, "quantile_optgaps",
-                        (1 - quantile_sizes / opt).tolist(),
-                    )
+                        dict_of_ratios = {
+                            key: -1 * val / opt for key, val in dict_of_vals.items()
+                        }
+                        dict_of_ratios["gibbs_ratio"] = dict_of_ratios["gibbs_ratio"] / eta
+                        metrics.store_metric(num_qubits, unique_id, None, dict_of_ratios)
 
-                    iter_dist = {"cuts": cuts, "counts": counts, "sizes": sizes}
+                        best = -compute_best_cut_from_measured(counts, sizes)
+                        metrics.store_metric(
+                            num_qubits, unique_id, "bestcut_ratio", best / opt
+                        )
+
+                        quantile_sizes = compute_quartiles(counts, sizes)
+                        metrics.store_metric(
+                            num_qubits, unique_id, "quantile_optgaps",
+                            (1 - quantile_sizes / opt).tolist(),
+                        )
+
+                        iter_dist = {"cuts": cuts, "counts": counts, "sizes": sizes}
+                        objective_value = dict_of_vals[objective_func_type]
                     minimizer_loop_index += 1
 
                     if comfort:
@@ -752,7 +755,8 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
                         print(".", end="")
 
                     opt_ts = time.time()
-                    return dict_of_vals[objective_func_type]
+                    # MPI: return the rank-0 objective to every optimizer instance.
+                    return mpi.bcast(objective_value)
 
                 opt_ts = time.time()
                 thetas_array_0 = thetas_array
