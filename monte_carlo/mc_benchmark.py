@@ -62,7 +62,7 @@ def analyze_and_print_result(qc, result, num_counting_qubits, mu, num_shots, met
     app_correct_dist = mc_utils.mc_dist(num_counting_qubits, exact, c_star, method)
     app_thermal_dist = expectation_from_bits(thermal_dist, num_counting_qubits, num_shots, method, c_star)
 
-    if verbose:
+    if verbose and mpi.leader():
         print(f"For expected value {exact}, expected: {correct_dist} measured: {counts}")
         print(f"   ... For expected value {exact} thermal_dist: {thermal_dist}")
         print(f"For expected value {exact}, app expected: {app_correct_dist} measured: {app_counts}")
@@ -76,9 +76,10 @@ def analyze_and_print_result(qc, result, num_counting_qubits, mu, num_shots, met
     # the max in the counts is what the algorithm would report as the correct answer
     a, _ = mc_utils.value_and_max_prob_from_dist(counts)
 
-    if verbose: print(f"For expected value {exact} measured: {a}")
-    if verbose: print(f"Solution counts: {counts}")
-    if verbose: print(f"  ... fidelity: {fidelity}  hf_fidelity: {hf_fidelity}")
+    if verbose and mpi.leader():
+        print(f"For expected value {exact} measured: {a}")
+        print(f"Solution counts: {counts}")
+        print(f"  ... fidelity: {fidelity}  hf_fidelity: {hf_fidelity}")
 
     return counts, fidelity
 

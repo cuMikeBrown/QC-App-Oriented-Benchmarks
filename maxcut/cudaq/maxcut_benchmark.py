@@ -249,7 +249,9 @@ def compute_cutsizes(results, nodes, edges):
 
 
 def get_size_dist(counts, sizes):
-    unique_sizes = list(set(sizes))
+    # dict.fromkeys preserves insertion order; set iteration order varies
+    # across processes under hash randomization and can desync MPI ranks.
+    unique_sizes = list(dict.fromkeys(sizes))
     unique_counts = [0] * len(unique_sizes)
 
     for i_size, size in enumerate(unique_sizes):
@@ -694,59 +696,65 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
                     ex.finalize_execution(None, report_end=False)
 
                     objective_value = None
+                    leader_error = None
                     if mpi.leader():
-                        if do_compute_expectation:
-                            _, fidelity = analyze_and_print_result(
-                                qc, saved_result, num_qubits, num_shots,
-                                secret_int=unique_id,
-                            )
-                            metrics.store_metric(num_qubits, unique_id, "fidelity", fidelity)
+                        # Catch any exception so we still reach the bcast below;
+                        # otherwise non-leader ranks would deadlock waiting.
+                        try:
+                            if do_compute_expectation:
+                                _, fidelity = analyze_and_print_result(
+                                    qc, saved_result, num_qubits, num_shots,
+                                    secret_int=unique_id,
+                                )
+                                metrics.store_metric(num_qubits, unique_id, "fidelity", fidelity)
 
-                        dict_of_vals = dict()
-                        tc1 = time.time()
-                        cuts, counts, sizes = compute_cutsizes(saved_result, nodes, edges)
-                        dict_of_vals[objective_func_type] = function_mapper[
-                            objective_func_type
-                        ](counts, sizes, alpha=alpha)
-                        metrics.store_metric(
-                            num_qubits, unique_id, "opt_exec_time",
-                            time.time() - tc1 + ts - opt_ts,
-                        )
-
-                        unique_counts, unique_sizes, cumul_counts = get_size_dist(
-                            counts, sizes
-                        )
-                        iter_size_dist = {
-                            "unique_sizes": unique_sizes,
-                            "unique_counts": unique_counts,
-                            "cumul_counts": cumul_counts,
-                        }
-                        metrics.store_metric(num_qubits, unique_id, None, iter_size_dist)
-
-                        for score in non_objFunc_ratios:
-                            dict_of_vals[score] = function_mapper[score](
-                                counts, sizes, alpha=alpha
+                            dict_of_vals = dict()
+                            tc1 = time.time()
+                            cuts, counts, sizes = compute_cutsizes(saved_result, nodes, edges)
+                            dict_of_vals[objective_func_type] = function_mapper[
+                                objective_func_type
+                            ](counts, sizes, alpha=alpha)
+                            metrics.store_metric(
+                                num_qubits, unique_id, "opt_exec_time",
+                                time.time() - tc1 + ts - opt_ts,
                             )
 
-                        dict_of_ratios = {
-                            key: -1 * val / opt for key, val in dict_of_vals.items()
-                        }
-                        dict_of_ratios["gibbs_ratio"] = dict_of_ratios["gibbs_ratio"] / eta
-                        metrics.store_metric(num_qubits, unique_id, None, dict_of_ratios)
+                            unique_counts, unique_sizes, cumul_counts = get_size_dist(
+                                counts, sizes
+                            )
+                            iter_size_dist = {
+                                "unique_sizes": unique_sizes,
+                                "unique_counts": unique_counts,
+                                "cumul_counts": cumul_counts,
+                            }
+                            metrics.store_metric(num_qubits, unique_id, None, iter_size_dist)
 
-                        best = -compute_best_cut_from_measured(counts, sizes)
-                        metrics.store_metric(
-                            num_qubits, unique_id, "bestcut_ratio", best / opt
-                        )
+                            for score in non_objFunc_ratios:
+                                dict_of_vals[score] = function_mapper[score](
+                                    counts, sizes, alpha=alpha
+                                )
 
-                        quantile_sizes = compute_quartiles(counts, sizes)
-                        metrics.store_metric(
-                            num_qubits, unique_id, "quantile_optgaps",
-                            (1 - quantile_sizes / opt).tolist(),
-                        )
+                            dict_of_ratios = {
+                                key: -1 * val / opt for key, val in dict_of_vals.items()
+                            }
+                            dict_of_ratios["gibbs_ratio"] = dict_of_ratios["gibbs_ratio"] / eta
+                            metrics.store_metric(num_qubits, unique_id, None, dict_of_ratios)
 
-                        iter_dist = {"cuts": cuts, "counts": counts, "sizes": sizes}
-                        objective_value = dict_of_vals[objective_func_type]
+                            best = -compute_best_cut_from_measured(counts, sizes)
+                            metrics.store_metric(
+                                num_qubits, unique_id, "bestcut_ratio", best / opt
+                            )
+
+                            quantile_sizes = compute_quartiles(counts, sizes)
+                            metrics.store_metric(
+                                num_qubits, unique_id, "quantile_optgaps",
+                                (1 - quantile_sizes / opt).tolist(),
+                            )
+
+                            iter_dist = {"cuts": cuts, "counts": counts, "sizes": sizes}
+                            objective_value = dict_of_vals[objective_func_type]
+                        except Exception as exc:
+                            leader_error = repr(exc)
                     minimizer_loop_index += 1
 
                     if comfort:
@@ -755,8 +763,16 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
                         print(".", end="")
 
                     opt_ts = time.time()
-                    # MPI: return the rank-0 objective to every optimizer instance.
-                    return mpi.bcast(objective_value)
+                    # MPI: return the rank-0 objective to every optimizer
+                    # instance; surface leader exceptions on every rank.
+                    objective_value, leader_error = mpi.bcast(
+                        (objective_value, leader_error)
+                    )
+                    if leader_error is not None:
+                        raise RuntimeError(
+                            f"MaxCut COBYLA expectation failed on rank 0: {leader_error}"
+                        )
+                    return objective_value
 
                 opt_ts = time.time()
                 thetas_array_0 = thetas_array
