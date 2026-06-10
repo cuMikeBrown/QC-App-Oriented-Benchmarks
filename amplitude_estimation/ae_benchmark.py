@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 # The QED-C initialization module
 from _common.qedc_init import qedc_benchmarks_init
 from _common import metrics
+from _common import qcb_mpi as mpi
 from _common.backend_utils import api_display_name, is_simulator_backend
 
 
@@ -109,6 +110,8 @@ def run(min_qubits=3, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=100
     qedc_benchmarks_init(api, "amplitude_estimation", ["ae_kernel"])
     import ae_kernel as kernel
     import execute as ex
+
+    mpi.init()
 
     ##########
 

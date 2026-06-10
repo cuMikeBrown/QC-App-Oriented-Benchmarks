@@ -11,6 +11,7 @@ import numpy as np
 import cudaq
 
 from _common import metrics
+from _common import qcb_mpi as mpi
 from _common.cudaq import execute as ex
 from _common.backend_utils import api_display_name
 from hhl._common.hhl_helpers import (
@@ -270,6 +271,8 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
         hub="ibm-q", group="open", project="main", exec_options=None,
         context=None, api=None, get_circuits=False,
         draw_circuits=True, plot_results=True):
+
+    mpi.init()
 
     max_qubits = max(4, max_qubits)
     min_qubits = min(max(4, min_qubits), max_qubits)

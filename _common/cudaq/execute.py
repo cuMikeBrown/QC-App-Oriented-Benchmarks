@@ -425,11 +425,15 @@ def set_noise_model(noise_model = None):
 # Submit circuit for execution
 # This version executes immediately and calls the result handler
 def submit_circuit (qc, group_id, circuit_id, shots=100, params=None):
+    if mpi.enabled():
+        mpi.barrier()
+
+    submit_time = time.time()
 
     # store circuit in array with submission time and circuit info
     batched_circuits.append(
         { "qc": qc, "group": str(group_id), "circuit": str(circuit_id),
-            "submit_time": time.time(), "shots": shots, "params": params }
+            "submit_time": submit_time, "shots": shots, "params": params }
     )
     #print("... submit circuit - ", str(batched_circuits[len(batched_circuits)-1]))
     
@@ -449,7 +453,6 @@ def execute_circuit (batched_circuit):
         print(f'... execute_circuit({batched_circuit["group"]}, {batched_circuit["circuit"]})')
 
     active_circuit = copy.copy(batched_circuit)
-    active_circuit["launch_time"] = time.time()
     
     num_shots = batched_circuit["shots"]
     
@@ -467,7 +470,11 @@ def execute_circuit (batched_circuit):
     # draw the circuit, but only for debugging
     # print(cudaq.draw(circuit[0], *circuit[1]))
     
+    if mpi.enabled():
+        mpi.barrier()
+
     ts = time.time()
+    active_circuit["launch_time"] = ts
     
     # call sample() on circuit with its list of arguments
     if verbose: print(f"... during exec, noise model is: {noise}")
@@ -475,6 +482,9 @@ def execute_circuit (batched_circuit):
 
     # control results print at benchmark level
     #if verbose: print(result)
+
+    if mpi.enabled():
+        mpi.barrier()
 
     exec_time = time.time() - ts
 
@@ -674,6 +684,9 @@ def throttle_execution(completion_handler=metrics.finalize_group):
     global last_group
     group = last_group
     
+    if mpi.enabled():
+        mpi.barrier()
+
     # call completion handler with the group id
     if completion_handler != None:
         completion_handler(group)
@@ -743,6 +756,9 @@ def finalize_execution(completion_handler=metrics.finalize_group, report_end=Tru
     if verbose:
         if pollcount > 0: print("")
     '''
+    if mpi.enabled():
+        mpi.barrier()
+
     # indicate we are done collecting metrics (called once at end of app)
     if report_end:
         metrics.end_metrics()
@@ -802,6 +818,9 @@ def execute_circuit_immed (circuit: list, num_shots: int):
         # draw the circuit, but only for debugging
         # print(cudaq.draw(circuit[0], *circuit[1]))
         
+        if mpi.enabled():
+            mpi.barrier()
+
         ts = time.time()
         
         # call sample() on circuit with its list of arguments
@@ -811,6 +830,9 @@ def execute_circuit_immed (circuit: list, num_shots: int):
         # control results print at benchmark level
         #if verbose: print(result)
             
+        if mpi.enabled():
+            mpi.barrier()
+
         exec_time = time.time() - ts
         
         # store the result object on the job for processing in job_complete

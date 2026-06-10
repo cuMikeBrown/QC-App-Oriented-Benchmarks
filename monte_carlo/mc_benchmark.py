@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 # The QED-C initialization module (import before adding local _common to path)
 from _common.qedc_init import qedc_benchmarks_init
 from _common import metrics
+from _common import qcb_mpi as mpi
 from _common.backend_utils import api_display_name, is_simulator_backend
 
 # Add local _common to path for mc_utils (after global _common imports)
@@ -129,6 +130,8 @@ def run(min_qubits=MIN_QUBITS, max_qubits=10, skip_qubits=1, max_circuits=1, num
     qedc_benchmarks_init(api, "monte_carlo", ["mc_kernel"])
     import mc_kernel as kernel
     import execute as ex
+
+    mpi.init()
 
     ##########
 

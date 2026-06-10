@@ -20,6 +20,7 @@ from scipy.optimize import minimize
 
 from maxcut._common import common
 from _common import metrics
+from _common import qcb_mpi as mpi
 from _common.cudaq import execute as ex
 
 
@@ -401,6 +402,9 @@ def store_final_iter_to_metrics_json(num_qubits, degree, restart_ind,
 def dump_to_json(parent_folder_save, num_qubits, restart_ind, iter_size_dist,
                  iter_dist, dict_of_inputs, converged_thetas_list, opt,
                  unif_dict, save_final_counts=False):
+    if not mpi.leader():
+        return
+
     if not os.path.exists(parent_folder_save):
         os.makedirs(parent_folder_save)
 
@@ -510,6 +514,8 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
     global opt_ts
     QC_ = None
 
+    mpi.init()
+
     print(f"{benchmark_name} ({method}) Benchmark Program - CUDA-Q")
 
     if detailed_save_names:
@@ -521,7 +527,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
     else:
         parent_folder_save = os.path.join("__results", f"{backend_id}", objective_func_type)
 
-    if save_res_to_file and not os.path.exists(parent_folder_save):
+    if save_res_to_file and mpi.leader() and not os.path.exists(parent_folder_save):
         os.makedirs(parent_folder_save)
 
     max_qubits = max(4, max_qubits)

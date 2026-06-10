@@ -202,7 +202,8 @@ def init_metrics (warmup = False):
     
     # store the start of execution for the current app
     start_time = time.time()
-    print(f'... execution starting at {get_timestr()}')
+    if mpi.leader():
+        print(f'... execution starting at {get_timestr()}')
 
 # End metrics collection for an application
 def end_metrics():
@@ -210,8 +211,9 @@ def end_metrics():
 
     end_time = time.time()
     total_run_time = round(end_time - start_time, 3)
-    print(f'... execution complete at {get_timestr()} in {total_run_time} secs')
-    print("")
+    if mpi.leader():
+        print(f'... execution complete at {get_timestr()} in {total_run_time} secs')
+        print("")
 
 ##################################################
 # METRICS STORE AND GET FUNCTIONS
@@ -873,6 +875,8 @@ maxcut_style = os.path.join(dir_path,'maxcut.mplstyle')
     
 # Plot bar charts for each metric over all groups
 def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_group = False, new_qubit_group = None, filters=None, suffix="", options=None):
+    if not mpi.leader():
+        return
     
     # get backend id for this set of circuits
     backend_id = get_backend_id()
@@ -1901,6 +1905,8 @@ def plot_metrics_for_app(backend_id, appname, apiname="Qiskit", filters=None, op
 
 # save plot as image
 def save_plot_image(plt, imagename, backend_id):
+    if not mpi.leader():
+        return
 
     # don't leave slashes in the filename
     backend_id = backend_id.replace("/", "_")
@@ -2826,6 +2832,9 @@ def plot_metrics_optgaps (suptitle="",
      
 # Save the application metrics data to a shared file for the current device
 def store_app_metrics (backend_id, circuit_metrics, group_metrics, app, start_time=None, end_time=None):
+    if not mpi.leader():
+        return
+
     # print(f"... storing {title} {group_metrics}")
     
     # don't leave slashes in the filename
