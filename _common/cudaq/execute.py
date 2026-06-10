@@ -191,12 +191,19 @@ def _execute_parallel_mpi(circuits: list, num_shots: int) -> list:
         return None  # Signal to fall back to sequential
 
     # Override mgpu mode - each rank uses single GPU
-    # This is critical: mgpu pools all GPUs for ONE circuit, we want the opposite
+    # This is critical: mgpu pools all GPUs for ONE circuit, we want the opposite.
+    # Preserve precision and any other user-supplied flags by stripping only
+    # mgpu/mqpu from the resolved options.
     if rank == 0:
         print(f"... MPI parallel: {size} ranks, {len(circuits)} circuits")
         print(f"... Setting single-GPU target (overriding mgpu)")
 
-    cudaq.set_target("nvidia", option="fp32")
+    base_opt = _resolved_target_options.get("option", "fp32")
+    opt_parts = [p.strip() for p in base_opt.split(",")
+                 if p.strip() and p.strip() not in ("mgpu", "mqpu")]
+    if not opt_parts:
+        opt_parts.append("fp32")
+    cudaq.set_target("nvidia", option=",".join(opt_parts))
 
     # Synchronize before distribution
     mpi.barrier()
@@ -233,6 +240,11 @@ def _execute_parallel_mpi(circuits: list, num_shots: int) -> list:
 
 #noise = 'DEFAULT'
 noise=None
+
+# Tracks the most recent cudaq target options resolved by set_execution_target.
+# Read by _execute_parallel_mpi when it needs to strip mgpu while preserving
+# the user-requested precision and any other flags.
+_resolved_target_options = {"option": "fp32"}
 
 # Initialize circuit execution module
 # Create array of batched circuits and a dict of active circuits 
@@ -352,21 +364,34 @@ def set_execution_target(backend_id=None, provider_backend=None,
     if provider_backend != None:
         backend = provider_backend
     
-    # now set the execution target to the given backend_id
-    backend_options = {"option" : "fp32"}
-    if mpi.enabled():
-        backend_options = {"option" : "mgpu,fp32"}
-    elif exec_options is not None and isinstance(exec_options, str):
+    # Resolve target options: start from the user's `exec_options` (parsed as
+    # JSON) or fall back to fp32. Then, when MPI is enabled, add `mgpu` to the
+    # option list unless the user has already chosen a multi-GPU mode.
+    # This preserves any precision the user requested (e.g. fp64) under MPI.
+    backend_options = {"option": "fp32"}
+    if exec_options is not None and isinstance(exec_options, str):
         try:
-            backend_options = json.loads(exec_options)
-            for key, value in backend_options.items():
+            parsed = json.loads(exec_options)
+            for key, value in parsed.items():
                 if not isinstance(key, str):
                     raise ValueError("`exec_options` keys must be strings")
                 if not isinstance(value, (str, int, float, bool)):
                     raise ValueError("`exec_options` values must be str, int, float, or bool")
-        except:
+            backend_options = parsed
+        except Exception:
             print(f"    ... Invalid `exec_options`; using default options.")
-            
+
+    if mpi.enabled():
+        opt_parts = [p.strip() for p in backend_options.get("option", "").split(",") if p.strip()]
+        if "mgpu" not in opt_parts and "mqpu" not in opt_parts:
+            opt_parts.append("mgpu")
+        backend_options["option"] = ",".join(opt_parts)
+
+    # Remember the resolved options so MPI paths that strip mgpu can keep the
+    # user's precision and any other flags.
+    global _resolved_target_options
+    _resolved_target_options = dict(backend_options)
+
     cudaq.set_target(backend_id, **backend_options)
     
     # create an informative device name used by the metrics module
