@@ -20,26 +20,29 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
         method=1, use_best_widths=True, min_register_qubits=1,
         backend_id=None, provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
-        context=None, api=None, get_circuits=False,
+        context=None, api=None, warmup=False, get_circuits=False,
         draw_circuits=True, plot_results=True):
 
     # Configure the QED-C Benchmark package for use with the given API
     # Note: HHL only has qiskit implementation, so we always use qiskit
-    qedc_benchmarks_init(api if api else "qiskit", "hhl", ["hhl_benchmark"])
+    selected_api = api if api else "qiskit"
+    qedc_benchmarks_init(selected_api, "hhl", ["hhl_benchmark"])
 
     # Import the actual benchmark module (now available after qedc_init)
     import hhl_benchmark as hhl_impl
 
-    # Delegate to the implementation
-    return hhl_impl.run(
+    kwargs = dict(
         min_qubits=min_qubits, max_qubits=max_qubits, skip_qubits=skip_qubits,
         max_circuits=max_circuits, num_shots=num_shots,
         method=method, use_best_widths=use_best_widths, min_register_qubits=min_register_qubits,
         backend_id=backend_id, provider_backend=provider_backend,
         hub=hub, group=group, project=project, exec_options=exec_options,
         context=context, api=api, get_circuits=get_circuits,
-        draw_circuits=draw_circuits, plot_results=plot_results
+        draw_circuits=draw_circuits, plot_results=plot_results,
     )
+    if selected_api == "cudaq":
+        kwargs["warmup"] = warmup
+    return hhl_impl.run(**kwargs)
 
 
 #######################
@@ -60,6 +63,7 @@ def get_args():
     parser.add_argument("--use_best_widths", "-ubw", action="store_true", help="Use Best Widths")
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
+    parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
     parser.add_argument("--nodraw", "-nod", action="store_true", help="Do not draw circuit diagram")
     return parser.parse_args()
@@ -78,5 +82,6 @@ if __name__ == "__main__":
         backend_id=args.backend_id,
         exec_options={"noise_model": None} if args.nonoise else {},
         api=args.api,
+        warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot
     )

@@ -59,7 +59,7 @@ def analyze_and_print_result (qc, result, num_qubits, num_shots, type=None):
 def run (min_qubits=3, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=100,
         backend_id=None, provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
-        context=None, api=None, get_circuits=False,
+        context=None, api=None, warmup=False, get_circuits=False,
         draw_circuits=True, plot_results=True):
 
     # Configure the QED-C Benchmark package for use with the given API
@@ -92,7 +92,7 @@ def run (min_qubits=3, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
         all_qcs = {}
         
     # Initialize metrics module
-    metrics.init_metrics()
+    metrics.init_metrics(warmup)
 
     # Define custom result handler
     def execution_handler (qc, result, num_qubits, circuit_id, num_shots):
@@ -189,6 +189,7 @@ def get_args():
     #parser.add_argument("--method", "-m", default=1, help="Algorithm Method", type=int)
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
+    parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--exec_options", "-e", default=None, help="Additional execution options to be passed to the backend", type=str)
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
     parser.add_argument("--nodraw", "-nod", action="store_true", help="Do not draw circuit diagram")
@@ -211,6 +212,7 @@ if __name__ == '__main__':
         backend_id=args.backend_id,
         exec_options = {"noise_model" : None} if args.nonoise else {},
         api=args.api,
+        warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot
         )
    

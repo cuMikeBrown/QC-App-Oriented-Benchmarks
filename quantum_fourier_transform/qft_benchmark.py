@@ -155,8 +155,9 @@ def run (min_qubits=2, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
     def execution_handler (qc, result, input_size, circuit_id, num_shots):
 
         num_qubits = int(input_size)
+        s_int = int(str(circuit_id).split(":")[0])
         counts, fidelity = analyze_and_print_result(qc, result, num_qubits, num_shots,
-                s_int=int(circuit_id), method=method)
+                s_int=s_int, method=method)
         metrics.store_metric(input_size, circuit_id, 'fidelity', fidelity)
 
     # Initialize execution module using the execution result handler above and specified backend_id
@@ -215,7 +216,7 @@ def run (min_qubits=2, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
             s_range = list(dict.fromkeys(s_range))[0:max_circuits]
             
         # loop over limited # of secret strings for this
-        for s_int in s_range:
+        for repetition_index, s_int in enumerate(s_range):
             s_int = int(s_int)
 
             # if user specifies input_value, use it instead
@@ -224,7 +225,7 @@ def run (min_qubits=2, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=10
                 s_int = input_value
 
             # create circuit_id for use with metrics and execution framework
-            circuit_id = s_int
+            circuit_id = f"{s_int}:{repetition_index}" if input_value is not None else s_int
 
             # convert the secret int string to array of integers, each representing one bit
             bitset = str_to_ivec(input_size, s_int)

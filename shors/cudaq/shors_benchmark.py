@@ -186,7 +186,7 @@ def ShorsAlgorithm(number, base, method, verbose=False):
 def run(min_qubits=3, max_circuits=1, max_qubits=18, num_shots=100, method=1,
         verbose=False, backend_id=None, provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
-        context=None, api=None, get_circuits=False,
+        context=None, api=None, warmup=False, get_circuits=False,
         draw_circuits=True, plot_results=True):
 
     mpi.init()
@@ -209,7 +209,7 @@ def run(min_qubits=3, max_circuits=1, max_qubits=18, num_shots=100, method=1,
         print(f"Max number of qubits {max_qubits} too low for method {method}")
         return
 
-    metrics.init_metrics()
+    metrics.init_metrics(warmup)
 
     def execution_handler(qc, result, num_qubits_arg, circuit_id, num_shots_arg):
         num_qubits_int = int(num_qubits_arg)

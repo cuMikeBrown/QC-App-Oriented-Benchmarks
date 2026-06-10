@@ -29,6 +29,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
         context=None,
         min_annealing_time=1, max_annealing_time=200,
         api=None,
+        warmup=False,
         _instances=None,
         get_circuits=False,
         draw_circuits=True):
@@ -78,6 +79,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
             rounds=rounds,
             use_fixed_angles=use_fixed_angles,
             context=context,
+            warmup=warmup,
         )
     elif selected_api == "ocean":
         kwargs.update(
@@ -123,6 +125,7 @@ def get_args():
     parser.add_argument("--skip_fidelity", action="store_true", help="Skip fidelity calculation")
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
+    parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
     parser.add_argument("--nodraw", "-nod", action="store_true", help="Do not draw circuit diagram")
     return parser.parse_args()
@@ -144,5 +147,6 @@ if __name__ == "__main__":
         backend_id=args.backend_id,
         exec_options={"noise_model": None} if args.nonoise else {},
         api=args.api,
+        warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot
     )

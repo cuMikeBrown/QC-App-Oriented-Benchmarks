@@ -497,7 +497,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
         detailed_save_names=False, comfort=False, backend_id=None,
         provider_backend=None, eta=0.5, hub="ibm-q", group="open",
         project="main", exec_options=None, context=None, _instances=None,
-        get_circuits=False, draw_circuits=True):
+        warmup=False, get_circuits=False, draw_circuits=True):
     if method not in (1, 2):
         raise NotImplementedError("CUDA-Q MaxCut currently supports methods 1 and 2 only.")
 
@@ -571,7 +571,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=2,
             print(f"ERROR: no fixed angles for rounds = {rounds}")
             return
 
-    metrics.init_metrics()
+    metrics.init_metrics(warmup)
 
     def execution_handler(qc, result, num_qubits, circuit_id, num_shots):
         num_qubits = int(num_qubits)

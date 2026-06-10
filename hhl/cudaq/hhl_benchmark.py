@@ -269,7 +269,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
         method=1, use_best_widths=True, min_register_qubits=1,
         backend_id=None, provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
-        context=None, api=None, get_circuits=False,
+        context=None, api=None, warmup=False, get_circuits=False,
         draw_circuits=True, plot_results=True):
 
     mpi.init()
@@ -287,7 +287,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
 
     print(f"{benchmark_name} Benchmark Program - {api_display_name(api)}")
 
-    metrics.init_metrics()
+    metrics.init_metrics(warmup)
 
     def execution_handler(qc, result, num_qubits_arg, circuit_id, num_shots_arg):
         num_qubits_int = int(num_qubits_arg)
