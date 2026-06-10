@@ -73,7 +73,7 @@ def run(min_qubits=2, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
         backend_id=None, provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
         context=None, api=None, warmup=False, get_circuits=False,
-        draw_circuits=True, plot_results=True):
+        draw_circuits=True, plot_results=True, do_fidelities=True):
 
     # Configure the QED-C Benchmark package for use with the given API
     qedc_benchmarks_init(api, "grovers", ["grovers_kernel"])
@@ -120,6 +120,8 @@ def run(min_qubits=2, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
     def execution_handler(qc, result, num_qubits, circuit_id, num_shots):
 
         num_qubits = int(num_qubits)
+        if not do_fidelities:
+            return
         counts, fidelity = analyze_and_print_result(qc, result, num_qubits, num_shots,
                 marked_item=int(circuit_id))
         metrics.store_metric(num_qubits, circuit_id, 'fidelity', fidelity)
@@ -221,6 +223,7 @@ def get_args():
     #parser.add_argument("--input_value", "-i", default=None, help="Fixed Input Value", type=int)
     parser.add_argument("--use_mcx_shim", action="store_true", help="Use MCX Shim")
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
+    parser.add_argument("--skip_fidelity", action="store_true", help="Skip fidelity calculation")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
     parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--exec_options", "-e", default=None, help="Additional execution options to be passed to the backend", type=str)
@@ -247,5 +250,6 @@ if __name__ == '__main__':
         exec_options = {"noise_model" : None} if args.nonoise else {},
         api=args.api,
         warmup=args.warmup,
+        do_fidelities=not args.skip_fidelity,
         draw_circuits=not args.nodraw, plot_results=not args.noplot
         )
