@@ -247,7 +247,7 @@ if __name__ == '__main__':
         #method=args.method,            # not used currently
         use_mcx_shim=args.use_mcx_shim,
         backend_id=args.backend_id,
-        exec_options = {"noise_model" : None} if args.nonoise else {},
+        exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
         api=args.api,
         warmup=args.warmup,
         do_fidelities=not args.skip_fidelity,

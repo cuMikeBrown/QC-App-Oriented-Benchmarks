@@ -268,6 +268,7 @@ def get_args():
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
     parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
+    parser.add_argument("--exec_options", "-e", default=None, help="Additional execution options to be passed to the backend", type=str)
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
     parser.add_argument("--nodraw", "-nod", action="store_true", help="Do not draw circuit diagram")
     return parser.parse_args()
@@ -285,7 +286,7 @@ if __name__ == '__main__':
         method=args.method,
         num_state_qubits=args.num_state_qubits,
         backend_id=args.backend_id,
-        exec_options={"noise_model": None} if args.nonoise else {},
+        exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
         api=args.api,
         warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot

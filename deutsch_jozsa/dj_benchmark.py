@@ -210,7 +210,7 @@ if __name__ == '__main__':
         num_shots=args.num_shots,
         #method=args.method,
         backend_id=args.backend_id,
-        exec_options = {"noise_model" : None} if args.nonoise else {},
+        exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
         api=args.api,
         warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot
