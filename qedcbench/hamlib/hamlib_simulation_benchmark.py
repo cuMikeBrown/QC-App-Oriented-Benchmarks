@@ -285,6 +285,7 @@ def run(min_qubits: int = 2,
         exec_options = None,
         context = None,
         api = None,
+        warmup: bool = False,
         get_circuits = False,
         max_batch_size = None,
         gpus_per_circuit: int = None,
@@ -408,7 +409,7 @@ def run(min_qubits: int = 2,
     ################################
     
     # Initialize metrics module
-    metrics.init_metrics()
+    metrics.init_metrics(warmup)
 
     # Define custom result handler
     def execution_handler(qc, result, num_qubits, circuit_id, num_shots):
@@ -1132,6 +1133,7 @@ def get_args():
     parser.add_argument("--max_batch_size", "-mbs", default=None, help="Max circuits per execution batch", type=int)
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
+    parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--use_inverse_flag", "-inverse", action="store_true", help="Use inverse evolution")
     parser.add_argument("--do_sqrt_fidelity", "-sqrt", action="store_true", help="Return square root of fidelities")
     parser.add_argument("--random_pauli_flag", "-ranp", action="store_true", help="Gen random paulis")
@@ -1192,6 +1194,7 @@ def do_run(args):
         backend_id=args.backend_id,
         exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
         api=args.api,
+        warmup=args.warmup,
         max_batch_size=args.max_batch_size,
         gpus_per_circuit=args.gpus_per_circuit,
         parallel=args.parallel

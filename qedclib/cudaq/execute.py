@@ -136,7 +136,7 @@ def request_cancel():
     cancel_requested = True
 
 # Auto-warmup: execute a tiny circuit on first call to execute_circuits() to prime the JIT
-auto_warmup = True
+auto_warmup = False
 _warmup_done = False
 
 # Parallel execution flag — when True, execute_circuits() will distribute

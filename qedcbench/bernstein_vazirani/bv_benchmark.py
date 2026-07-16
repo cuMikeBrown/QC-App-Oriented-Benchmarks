@@ -237,7 +237,7 @@ def run(**kwargs):
         return {k: kwargs[k] for k in kwargs if k in inspect.signature(func).parameters}
 
     # Step 1: Create the benchmark circuits
-    metrics.init_metrics()
+    metrics.init_metrics(kwargs.get("warmup", False))
     all_qcs, circuit_metrics = get_circuits(**_for(get_circuits))
 
     # Step 2: Execute circuits on the target backend
@@ -268,6 +268,7 @@ def get_args():
     parser.add_argument("--max_batch_size", "-mbs", default=None, help="Max circuits per execution batch", type=int)
     parser.add_argument("--nonoise", "-non", action="store_true", help="Use Noiseless Simulator")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
+    parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
     parser.add_argument("--nodraw", "-nod", action="store_true", help="Do not draw circuit diagram")
     parser.add_argument("--parallel", "-pm", action="store_true", help="Enable parallel circuit execution")
@@ -284,5 +285,6 @@ if __name__ == '__main__':
         input_value=args.input_value, backend_id=args.backend_id,
         exec_options={"noise_model": None} if args.nonoise else None,
         api=args.api, max_batch_size=args.max_batch_size,
+        warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot,
         parallel=args.parallel)
