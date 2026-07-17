@@ -16,7 +16,7 @@ from qedclib import qcb_mpi as mpi
 from qedclib.cudaq import execute as ex
 from qedclib.backend_utils import api_display_name
 
-from shors._common.shors_utils import generate_base
+from shors._common.shors_utils import generate_base, multiplicative_order
 from shors._common.shors_helpers import (
     build_shors_m1_arrays,
     build_shors_m2_iteration_arrays,
@@ -248,10 +248,7 @@ def run(min_qubits=3, max_circuits=1, max_qubits=18, num_shots=100, method=1,
                 number = np.random.randint(2 ** (num_bits - 1) + 1, 2 ** num_bits)
                 order = np.random.randint(2, number)
                 base = generate_base(number, order)
-            if order % 2 == 0:
-                order = 2
-            if order % 3 == 0:
-                order = 3
+            order = multiplicative_order(base, number)
             number_order = (number, order)
             circuit_id = number_order
 

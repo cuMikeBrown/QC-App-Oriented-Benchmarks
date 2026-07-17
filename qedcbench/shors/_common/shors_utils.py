@@ -44,6 +44,21 @@ def verify_order(base, number, order):
     # when order is large enough to exceed double-precision range.
     return pow(base, order, number) == 1
 
+
+def multiplicative_order(base, number):
+    """Return the smallest positive r for which base**r mod number == 1."""
+    if gcd(base, number) != 1:
+        raise ValueError(f"{base} and {number} must be coprime")
+
+    value = 1
+    for order in range(1, number + 1):
+        value = (value * base) % number
+        if value == 1:
+            return order
+
+    raise ValueError(f"Could not determine the order of {base} modulo {number}")
+
+
 # Generates the base for base**order mod number = 1
 def generate_base(number, order):
     for a in range(2, number):

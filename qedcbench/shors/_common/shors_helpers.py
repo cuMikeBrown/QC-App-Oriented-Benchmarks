@@ -352,17 +352,52 @@ def build_shors_m1_arrays(number, base):
 ############### Analyzer (qiskit-free)
 
 def expected_shor_dist(num_bits, order, num_shots):
-    """Analytical Shor's order-finding distribution. Pure numpy/Python.
+    """Return the exact finite-register order-finding distribution.
 
-    Mirrors shors/qiskit/shors_benchmark.expected_shor_dist exactly."""
+    The counting register contains ``2 * num_bits`` qubits.  When its
+    dimension is not divisible by the order, probability is spread around
+    each ideal phase rather than concentrated at ``floor(Q * s / r)``.
+    """
     qubits_measured = 2 * num_bits
-    dist = {}
     r = int(order)
-    q = int(2 ** qubits_measured)
-    for i in range(r):
-        key = bin(int(q * (i / r)))[2:].zfill(qubits_measured)
-        dist[key] = num_shots / r
-    return dist
+    if r < 1:
+        raise ValueError(f"order must be positive, got {order}")
+
+    q = 1 << qubits_measured
+    short_length, long_count = divmod(q, r)
+    outcomes = np.arange(q, dtype=np.int64)
+    residues = (r * outcomes) % q
+    half_angles = np.pi * residues / q
+    denominators = np.sin(half_angles)
+
+    def geometric_magnitude(length):
+        """Squared magnitude of sum(exp(2πi*j*r*y/Q), j=0..length-1)."""
+        magnitudes = np.empty(q, dtype=np.float64)
+        exact_peak = residues == 0
+        exact_zero = (~exact_peak) & (((length * residues) % q) == 0)
+        regular = ~(exact_peak | exact_zero)
+
+        magnitudes[exact_peak] = float(length * length)
+        magnitudes[exact_zero] = 0.0
+        magnitudes[regular] = (
+            np.sin(length * half_angles[regular]) / denominators[regular]
+        ) ** 2
+        return magnitudes
+
+    probabilities = (
+        long_count * geometric_magnitude(short_length + 1)
+        + (r - long_count) * geometric_magnitude(short_length)
+    ) / float(q * q)
+
+    # Remove accumulated floating-point normalization error before metrics
+    # compares this distribution with sampled counts.
+    probabilities /= probabilities.sum()
+    scale = float(num_shots)
+    return {
+        format(outcome, f"0{qubits_measured}b"): float(probability * scale)
+        for outcome, probability in enumerate(probabilities)
+        if probability > 0.0
+    }
 
 
 def analyze_and_print_result(qc, result, num_qubits, num_shots,
