@@ -367,7 +367,8 @@ def get_expectation(
         ham_op: Union[
                 List[Tuple[str, complex]],
                 List[Tuple[Dict[int, str], complex]]
-            ] = None
+            ] = None,
+        observe_fn: Callable = None
         ):
 
     #print(f"... cudaq_kernel.get_expectation()")
@@ -376,7 +377,9 @@ def get_expectation(
     spin_op = convert_to_spin_op(num_qubits, ham_op)
     #print(f"... spin_op = {spin_op}")
     
-    result = cudaq.observe(qc[0], spin_op, *qc[1])       
+    if observe_fn is None:
+        observe_fn = cudaq.observe
+    result = observe_fn(qc[0], spin_op, *qc[1])
 
     exp = result.expectation()
     
