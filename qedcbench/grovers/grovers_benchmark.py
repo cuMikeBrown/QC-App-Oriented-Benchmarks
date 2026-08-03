@@ -17,7 +17,7 @@ import sys; from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 import qedclib
-from qedclib import get_kernel, is_leader, metrics
+from qedclib import get_kernel, is_leader, metrics, qcb_mpi
 from qedclib.backend_utils import api_display_name, is_simulator_backend
 
 benchmark_name = "Grovers Search"
@@ -27,6 +27,16 @@ verbose = False
 
 # Circuit size grows significantly with num_qubits (due to mcx gate)
 MAX_QUBITS = 8
+
+
+def _check_cudaq_multi_gpu(api=None):
+    """Reject CUDA-Q multi-GPU execution, which Grover's does not support."""
+    qcb_mpi.init()
+    selected_api = api or qedclib.get_api()
+    if selected_api == "cudaq" and qcb_mpi.size > 1:
+        raise RuntimeError(
+            "CUDA-Q multi-GPU execution is currently not supported for Grover's benchmark."
+        )
 
 
 ############### Get Circuits
@@ -54,6 +64,7 @@ def get_circuits(
     Returns (all_qcs, circuit_metrics) — nested circuit dict and creation metrics.
     """
 
+    _check_cudaq_multi_gpu(api)
     # Load the API-specific circuit kernel for this benchmark (e.g. qiskit or cudaq)
     kernel = get_kernel("grovers_kernel", api=api)
 
@@ -148,6 +159,7 @@ def run_circuits(all_qcs,
         api: programming API if not already initialized (default None)
         parallel: enable parallel circuit execution (default False)
     """
+    _check_cudaq_multi_gpu(api)
     get_kernel("grovers_kernel", api=api)
     ex = qedclib.execute
     ex.verbose = verbose
