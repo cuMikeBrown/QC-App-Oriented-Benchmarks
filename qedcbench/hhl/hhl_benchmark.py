@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from qedclib import initialize
+from qedclib.backend_utils import (resolve_exec_options)
 
 benchmark_name = "HHL"
 
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         method=args.method,
         use_best_widths=args.use_best_widths,
         backend_id=args.backend_id,
-        exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
+        exec_options = resolve_exec_options(args),
         api=args.api,
         warmup=args.warmup,
         max_batch_size=args.max_batch_size,

@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 import qedclib
 from qedclib import get_kernel, is_leader, metrics, qcb_mpi
-from qedclib.backend_utils import api_display_name, is_simulator_backend
+from qedclib.backend_utils import api_display_name, is_simulator_backend, resolve_exec_options
 
 benchmark_name = "Grovers Search"
 
@@ -280,7 +280,7 @@ if __name__ == '__main__':
         skip_qubits=args.skip_qubits, max_circuits=args.max_circuits,
         num_shots=args.num_shots, use_mcx_shim=args.use_mcx_shim,
         backend_id=args.backend_id,
-        exec_options={"noise_model": None} if args.nonoise else args.exec_options,
+        exec_options=resolve_exec_options(args),
         api=args.api, max_batch_size=args.max_batch_size,
         warmup=args.warmup, do_fidelities=not args.skip_fidelity,
         draw_circuits=not args.nodraw, plot_results=not args.noplot,

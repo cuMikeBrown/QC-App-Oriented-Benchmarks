@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 import qedclib
 from qedclib import initialize, metrics
 from qedclib import qcb_mpi as mpi
-from qedclib.backend_utils import api_display_name
+from qedclib.backend_utils import api_display_name, resolve_exec_options
 
 
 api_ = "qiskit" 
@@ -1193,7 +1193,7 @@ def do_run(args):
         plot_results=not args.noplot,
         draw_circuits=not args.nodraw,
         backend_id=args.backend_id,
-        exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
+        exec_options = resolve_exec_options(args),
         api=args.api,
         warmup=args.warmup,
         max_batch_size=args.max_batch_size,

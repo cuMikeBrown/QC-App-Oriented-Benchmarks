@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 import qedclib
 from qedclib import get_kernel, is_leader, metrics
-from qedclib.backend_utils import api_display_name
+from qedclib.backend_utils import api_display_name, resolve_exec_options
 
 benchmark_name = "Quantum Fourier Transform"
 
@@ -289,6 +289,7 @@ def get_args():
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
     parser.add_argument("--warmup", "-w", action="store_true", help="Exclude first circuit from timing stats as warmup")
     parser.add_argument("--use_midcircuit_measurement", "-mid", action="store_true", help="Use dynamic circuit")
+    parser.add_argument("--exec_options", "-e", default=None, help="Additional execution options to be passed to the backend", type=str)
     parser.add_argument("--parallel", "-pm", action="store_true", help="Enable parallel circuit execution")
     parser.add_argument("--noplot", "-nop", action="store_true", help="Do not plot results")
     parser.add_argument("--nodraw", "-nod", action="store_true", help="Do not draw circuit diagram")
@@ -304,7 +305,7 @@ if __name__ == '__main__':
         num_shots=args.num_shots, method=args.method,
         use_midcircuit_measurement=args.use_midcircuit_measurement,
         input_value=args.input_value, backend_id=args.backend_id,
-        exec_options={"noise_model": None} if args.nonoise else None,
+        exec_options=resolve_exec_options(args),
         api=args.api, max_batch_size=args.max_batch_size,
         warmup=args.warmup,
         parallel=args.parallel,

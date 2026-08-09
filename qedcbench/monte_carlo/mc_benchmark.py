@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 import qedclib
 from qedclib import get_kernel, is_leader, metrics
-from qedclib.backend_utils import api_display_name, is_simulator_backend
+from qedclib.backend_utils import api_display_name, is_simulator_backend, resolve_exec_options
 
 # Add local _common to path for mc_utils
 sys.path.insert(0, str(Path(__file__).parent / "_common"))
@@ -346,7 +346,7 @@ if __name__ == '__main__':
         num_shots=args.num_shots, method=args.method,
         num_state_qubits=args.num_state_qubits,
         backend_id=args.backend_id,
-        exec_options={"noise_model": None} if args.nonoise else args.exec_options,
+        exec_options=resolve_exec_options(args),
         api=args.api, max_batch_size=args.max_batch_size,
         warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot,

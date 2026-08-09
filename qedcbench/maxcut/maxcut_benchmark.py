@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from qedclib import initialize
+from qedclib.backend_utils import (resolve_exec_options)
 
 # Benchmark Name
 benchmark_name = "MaxCut"
@@ -150,7 +151,7 @@ if __name__ == "__main__":
         parameterized=args.parameterized,
         do_fidelities=not args.skip_fidelity,
         backend_id=args.backend_id,
-        exec_options = {"noise_model" : None} if args.nonoise else args.exec_options,
+        exec_options = resolve_exec_options(args),
         api=args.api,
         warmup=args.warmup,
         draw_circuits=not args.nodraw, plot_results=not args.noplot,
