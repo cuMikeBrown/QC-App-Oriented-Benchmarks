@@ -68,33 +68,46 @@ def get_circuits(
         np.random.seed(0)
         num_qubits = input_size
 
-        # Compute how many circuits to create and select random input values
+        # Compute how many circuits to create.
         if method == 1 or method == 2:
             num_circuits = min(2 ** (input_size), max_circuits)
+        elif method == 3:
+            num_circuits = min(input_size, max_circuits)
+        else:
+            sys.exit("Invalid QFT method")
+
+        # Select unique random secret integers as circuit inputs. For method 3,
+        # valid domain is 1..n.
+        if method == 3:
+            if input_size <= max_circuits:
+                s_range = list(range(1, input_size + 1))
+            else:
+                s_range = np.random.choice(
+                    np.arange(1, input_size + 1),
+                    size=num_circuits,
+                    replace=False,
+                ).tolist()
+        else:
             if 2**(input_size) <= max_circuits:
                 s_range = list(range(num_circuits))
             else:
-                s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
-                s_range = list(dict.fromkeys(s_range))[0:num_circuits]
-        elif method == 3:
-            num_circuits = min(input_size, max_circuits)
-            if input_size <= max_circuits:
-                s_range = list(range(num_circuits))
-            else:
-                s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
-                s_range = list(dict.fromkeys(s_range))[0:num_circuits]
-        else:
-            sys.exit("Invalid QFT method")
+                s_range = np.random.randint(
+                    1, 2**(input_size), num_circuits + 2
+                )
+                s_range = list(dict.fromkeys(s_range))[0:max_circuits]
 
         print(f"************\nCreating [{num_circuits}] circuits with num_qubits = {num_qubits}")
         all_qcs[str(num_qubits)] = {}
 
-        # Select unique random secret integers as circuit inputs
-        if 2**(input_size) <= max_circuits:
-            s_range = list(range(num_circuits))
-        else:
-            s_range = np.random.randint(1, 2**(input_size), num_circuits + 2)
-            s_range = list(dict.fromkeys(s_range))[0:max_circuits]
+        if (
+            method == 3
+            and input_value is not None
+            and not 1 <= int(input_value) <= num_qubits
+        ):
+            raise ValueError(
+                "QFT method 3 input_value must be between 1 and "
+                f"num_qubits ({num_qubits}), got {input_value}"
+            )
 
         # Create each circuit with a different input value and store in the dict
         for repetition_index, s_int in enumerate(s_range):
@@ -139,6 +152,11 @@ def analyze_and_print_result(qc, result, num_qubits, num_shots, s_int=None, meth
 
 def expected_dist(num_qubits, secret_int, counts):
     """Compute the expected measurement distribution for method 3 (partial superposition)."""
+    if not 1 <= secret_int <= num_qubits:
+        raise ValueError(
+            "QFT method 3 secret_int must be between 1 and "
+            f"num_qubits ({num_qubits}), got {secret_int}"
+        )
     dist = {}
     s = num_qubits - secret_int
     for key in counts.keys():
