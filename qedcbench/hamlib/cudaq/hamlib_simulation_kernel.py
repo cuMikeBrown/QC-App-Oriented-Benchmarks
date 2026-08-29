@@ -201,12 +201,21 @@ Extract the coefficients and Pauli words from the provided Hamiltonian for use i
 """
 def extractCoefficients(hamiltonian: cudaq.SpinOperator) -> List[float]:
     result = []
-    hamiltonian.for_each_term(lambda term: result.append(term.get_coefficient().real))
+    if hasattr(hamiltonian, "for_each_term"):
+        hamiltonian.for_each_term(
+            lambda term: result.append(term.get_coefficient().real))
+    else:
+        result.extend(
+            term.evaluate_coefficient().real for term in hamiltonian)
     return result
 
 def extractWords(hamiltonian: cudaq.SpinOperator) -> List[str]:
     result = []
-    hamiltonian.for_each_term(lambda term: result.append(term.to_string(False)))
+    if hasattr(hamiltonian, "for_each_term"):
+        hamiltonian.for_each_term(
+            lambda term: result.append(term.to_string(False)))
+    else:
+        result.extend(term.get_pauli_word() for term in hamiltonian)
     return result
  
  
